@@ -1,0 +1,47 @@
+version: "3.8"
+
+services:
+  backend:
+    build: ./servidor
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./servidor:/app
+      - /app/node_modules
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      - DB_HOST=mysql
+      - DB_USER=root
+      - DB_PASS=123456
+      - DB_NAME=mi_base_de_datos
+
+  frontend:
+    build: ./cliente
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./cliente:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+  mysql:
+    image: mysql:8
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: mi_base_de_datos
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      retries: 5
+      timeout: 5s
+
+volumes:
+  mysql_data:
